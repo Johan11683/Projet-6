@@ -2,8 +2,14 @@ const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 
-
 const app = express();
+
+// Routing
+const bookRoutes = require('./routes/books');
+
+
+const userRoutes = require('./routes/user');
+
 
 // Connexion MongoDB
 mongoose.connect('mongodb+srv://monardjohan:13092024Anna!@projet6oc.ctslzqn.mongodb.net/',
@@ -27,6 +33,9 @@ app.use((req, res, next) => {
 
 // JSON
 app.use(express.json());
+app.use('/api/books', bookRoutes);
+app.use('/api/auth', userRoutes);
+
 
 
 module.exports = app;
