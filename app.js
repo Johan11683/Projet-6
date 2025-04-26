@@ -6,8 +6,6 @@ const app = express();
 
 // Routing
 const bookRoutes = require('./routes/books');
-
-
 const userRoutes = require('./routes/user');
 
 
