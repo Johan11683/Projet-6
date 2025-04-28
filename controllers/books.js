@@ -59,35 +59,42 @@ exports.getOneBook = (req, res) => {
 
 // Fonction pour modifier un livre
 exports.updateBook = (req, res) => {
-  // Vérifie si on reçoit une nouvelle image ou pas
+  // Vérification si un fichier est téléchargé (Multer a traité le fichier)
   const bookObject = req.file
     ? {
-        ...JSON.parse(req.body.book),
-        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
+        // Si un fichier est téléchargé, on traite le livre contenu dans req.body.book (qui est une chaîne JSON)
+        ...JSON.parse(req.body.book), // Convertit la chaîne en objet
+        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}` // Crée l'URL de l'image
       }
-    : { ...req.body };
+    : { ...req.body }; // Sinon, on utilise directement le corps de la requête si aucun fichier n'est envoyé
 
-  delete bookObject._userId; // On empêche que quelqu’un change l'userId via le front
+  // On empêche que quelqu'un modifie l'userId via la requête
+  delete bookObject._userId;
 
-  // On va chercher le livre
+  // On va chercher le livre avec l'_id de la requête (req.params.id)
   Book.findOne({ _id: req.params.id })
     .then(book => {
       if (!book) {
         return res.status(404).json({ message: 'Livre non trouvé' });
       }
 
-      // Vérifie que c'est bien le créateur du livre
-      if (book.userId !== req.auth.userId) { // si l'id de ce qu'on vient de récupérer est différent de celui du token, erreur)
-        return res.status(401).json({ message: 'Vous n\'êtes pas autorisé à modifier ce livre' });
+      // Vérifie que l'utilisateur qui modifie le livre est bien celui qui l'a créé
+      if (book.userId !== req.auth.userId) {
+        return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à modifier ce livre' });
       }
 
-      // Mise à jour du livre
+      // Mise à jour du livre avec les nouvelles données (imageUrl si fichier, sinon autres données du livre)
       Book.updateOne({ _id: req.params.id }, { ...bookObject, _id: req.params.id })
         .then(() => res.status(200).json({ message: 'Livre modifié !' }))
-        .catch(error => res.status(400).json({ error }));
+        .catch(error => {
+          res.status(400).json({ error });
+        });
     })
-    .catch(error => res.status(400).json({ error }));
+    .catch(error => {
+      res.status(400).json({ error });
+    });
 };
+
 
 
 

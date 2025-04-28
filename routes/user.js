@@ -11,14 +11,14 @@ router.post('/login', userCtrl.login);
 router.get('/', (req, res) => {
     User.find()
       .then(users => res.status(200).json(users))
-      .catch(error => res.status(400).json({ error }));
+      .catch(error => res.status(400).json(error));
 });
   
 // Route pour récupérer un utilisateur par son ID
 router.get('/:id', (req, res) => {
     User.findById(req.params.id)
       .then(user => res.status(200).json(user))
-      .catch(error => res.status(404).json({ error: 'Utilisateur non trouvé' }));
+      .catch(error => res.status(404).json(new Error('Utilisateur non trouvé')));
 });
 
 module.exports = router;

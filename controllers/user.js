@@ -12,9 +12,9 @@ exports.signup = (req, res, next) => {
       });
       user.save()
         .then(() => res.status(201).json({ message: 'Utilisateur créé !' }))
-        .catch(error => res.status(400).json({ error }));
+        .catch(error => res.status(400).json(error));
     })
-    .catch(error => res.status(500).json({ error }));
+    .catch(error => res.status(500).json(error));
 };
 
 exports.login = (req, res, next) => {
@@ -23,18 +23,18 @@ exports.login = (req, res, next) => {
   User.findOne({ email })
     .then(user => {
       if (!user) {
-        return res.status(401).json({ message: 'Utilisateur non trouvé !' });
+        return res.status(401).json(new Error('Utilisateur non trouvé !'));
       }
 
       bcrypt.compare(password, user.password)
         .then(valid => {
           if (!valid) {
-            return res.status(401).json({ message: 'Mot de passe incorrect !' });
+            return res.status(401).json(new Error('Mot de passe incorrect !'));
           }
 
           const token = jwt.sign(
             { userId: user._id },
-            process.env.JWT_SECRET,  // Utilisation de la clé secrète depuis .env
+            process.env.JWT_SECRET,
             { expiresIn: '24h' }
           );
 
@@ -43,7 +43,7 @@ exports.login = (req, res, next) => {
             token
           });
         })
-        .catch(error => res.status(500).json({ error }));
+        .catch(error => res.status(500).json(error));
     })
-    .catch(error => res.status(500).json({ error }));
+    .catch(error => res.status(500).json(error));
 };
