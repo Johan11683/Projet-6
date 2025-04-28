@@ -4,12 +4,11 @@ const path = require('path');
 
 const app = express();
 
-// Routing
+// Importation des routes
 const bookRoutes = require('./routes/books');
 const userRoutes = require('./routes/user');
 
-
-// Connexion MongoDB
+// Connexion à MongoDB
 mongoose.connect('mongodb+srv://monardjohan:13092024Anna!@projet6oc.ctslzqn.mongodb.net/',
   {
     useNewUrlParser: true,
@@ -18,22 +17,27 @@ mongoose.connect('mongodb+srv://monardjohan:13092024Anna!@projet6oc.ctslzqn.mong
   .then(() => console.log('Connexion à MongoDB réussie !'))
   .catch((error) => console.error('Connexion à MongoDB échouée !', error));
 
-// CORS
+// CORS (Cross-Origin Resource Sharing)
+// Permet de définir les en-têtes pour autoriser l'accès depuis différents domaines
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', '*'); // Autoriser toutes les origines
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization'
+    'Origin, X-Requested-With, Content-Type, Accept, Authorization' // Autoriser ces en-têtes
   );
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS'); // Autoriser ces méthodes
   next();
 });
 
-// JSON
+// Middleware pour gérer le corps des requêtes en JSON
 app.use(express.json());
-app.use('/api/books', bookRoutes);
-app.use('/api/auth', userRoutes);
 
+// Middleware pour servir les fichiers statiques (images)
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
+// Définition des routes API
+app.use('/api/books', bookRoutes);  // Routes pour les livres
+app.use('/api/auth', userRoutes);   // Routes pour l'authentification
 
+// Exportation de l'app pour l'utiliser dans le fichier server.js (ou autre fichier de démarrage)
 module.exports = app;
