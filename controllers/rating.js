@@ -68,20 +68,17 @@ exports.addRating = (req, res) => {
 exports.getBestRatedBooks = (req, res) => {
     Book.find()
       .then(books => {
-        // Sécurité : convertir en objets JS purs
-        const plainBooks = books.map(book => book.toObject());
-  
-        // Calculer averageRating proprement
-        plainBooks.forEach(book => {
+        // Calculer la note moyenne pour chaque livre
+        books.forEach(book => {
           const totalRatings = book.ratings.reduce((acc, rating) => acc + rating.grade, 0);
           book.averageRating = book.ratings.length ? totalRatings / book.ratings.length : 0;
         });
   
         // Trier les livres par moyenne décroissante
-        plainBooks.sort((a, b) => b.averageRating - a.averageRating);
+        books.sort((a, b) => b.averageRating - a.averageRating);
   
         // Renvoyer les 3 meilleurs
-        res.status(200).json(plainBooks.slice(0, 3));
+        res.status(200).json(books.slice(0, 3));
       })
       .catch(error => {
         console.error('Erreur lors de la récupération des meilleurs livres :', error);

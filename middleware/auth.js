@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 module.exports = (req, res, next) => {
   try {
@@ -14,9 +15,8 @@ module.exports = (req, res, next) => {
       return res.status(401).json({ message: 'Token invalide' });
     }
 
-    // Vérifier le token avec la clé secrète
-    const decodedToken = jwt.verify(token, 'RANDOM_SECRET_KEY');
-    
+    // Vérifier le token avec la clé secrète sécurisée depuis .env
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
 
     // Ajouter l'ID de l'utilisateur à la requête pour l'utiliser plus tard
     req.auth = { userId: decodedToken.userId };
