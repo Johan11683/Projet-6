@@ -1,5 +1,5 @@
 const Book = require('../models/Books');
-const fs = require('fs'); // fs est un package Node qui permet de modifier le système des fichiers, notamment de les supprimer (l'image)
+const fs = require('fs');
 
 // Fonction pour créer un livre
 exports.createBook = (req, res) => {
@@ -13,7 +13,7 @@ exports.createBook = (req, res) => {
   }
 
   delete bookObject._id;
-  delete bookObject.userId; // on protège l'id qui ne peut pas être modifié via le front
+  delete bookObject.userId;
 
   // Vérifie d'abord si un livre avec ce titre existe déjà
   Book.findOne({ title: bookObject.title })
@@ -59,43 +59,50 @@ exports.getOneBook = (req, res) => {
 
 // Fonction pour modifier un livre
 exports.updateBook = (req, res) => {
-  // Vérification si un fichier est téléchargé (Multer a traité le fichier)
   const bookObject = req.file
     ? {
-        // Si un fichier est téléchargé, on traite le livre contenu dans req.body.book (qui est une chaîne JSON)
-        ...JSON.parse(req.body.book), // Convertit la chaîne en objet
-        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}` // Crée l'URL de l'image
+        ...JSON.parse(req.body.book),
+        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}` // Nouvelle image
       }
-    : { ...req.body }; // Sinon, on utilise directement le corps de la requête si aucun fichier n'est envoyé
+    : { ...req.body };
 
   // On empêche que quelqu'un modifie l'userId via la requête
   delete bookObject._userId;
 
-  // On va chercher le livre avec l'_id de la requête (req.params.id)
   Book.findOne({ _id: req.params.id })
     .then(book => {
       if (!book) {
         return res.status(404).json({ message: 'Livre non trouvé' });
       }
 
-      // Vérifie que l'utilisateur qui modifie le livre est bien celui qui l'a créé
       if (book.userId !== req.auth.userId) {
         return res.status(403).json({ message: 'Vous n\'êtes pas autorisé à modifier ce livre' });
       }
 
-      // Mise à jour du livre avec les nouvelles données (imageUrl si fichier, sinon autres données du livre)
-      Book.updateOne({ _id: req.params.id }, { ...bookObject, _id: req.params.id })
-        .then(() => res.status(200).json({ message: 'Livre modifié !' }))
-        .catch(error => {
-          res.status(400).json({ error });
+      // Si une nouvelle image est envoyée, on supprime l'ancienne image
+      if (req.file) {
+        const filename = book.imageUrl.split('/images/')[1];  // Extraire le nom de l'image actuelle
+        fs.unlink(`images/${filename}`, (err) => {
+          if (err) {
+            return res.status(500).json({ message: 'Erreur lors de la suppression de l\'ancienne image', error: err });
+          }
+
+          // Mise à jour du livre avec la nouvelle image
+          Book.updateOne({ _id: req.params.id }, { ...bookObject, _id: req.params.id })
+            .then(() => res.status(200).json({ message: 'Livre modifié avec succès !' }))
+            .catch(error => res.status(400).json({ error }));
         });
+      } else {
+        // Si aucune nouvelle image n'est envoyée, on met à jour le livre sans toucher à l'image
+        Book.updateOne({ _id: req.params.id }, { ...bookObject, _id: req.params.id })
+          .then(() => res.status(200).json({ message: 'Livre modifié avec succès !' }))
+          .catch(error => res.status(400).json({ error }));
+      }
     })
     .catch(error => {
       res.status(400).json({ error });
     });
 };
-
-
 
 
 // Fonction pour supprimer un livre

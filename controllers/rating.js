@@ -1,7 +1,7 @@
 const Book = require('../models/Books');
 
 exports.addRating = (req, res) => {
-    const bookId = req.params.id; // L'ID du livre doit être récupéré ici
+    const bookId = req.params.id;
     const { userId, rating } = req.body;
 
     // Vérifier si l'ID est bien défini
@@ -11,12 +11,10 @@ exports.addRating = (req, res) => {
 
     console.log(`Ajout de la note pour le livre ${bookId} par l'utilisateur ${userId} : ${rating}`);
 
-    // Vérifie que la note est bien un nombre entre 0 et 5
     if (typeof rating !== 'number' || rating < 0 || rating > 5) {
         return res.status(400).json(new Error('La note doit être un nombre entre 0 et 5.'));
     }
 
-    // Recherche le livre par son ID
     Book.findOne({ _id: bookId })
         .then(book => {
             if (!book) {
@@ -41,11 +39,9 @@ exports.addRating = (req, res) => {
 
             console.log(`Nouvelle note moyenne : ${averageRating}`);
 
-            // Sauvegarde les modifications
             book.save()
             .then(() => {
                 console.log('Note ajoutée avec succès');
-                // Après la sauvegarde, on recharge le livre mis à jour
                 return Book.findById(bookId);
             })
             .then(updatedBook => {
@@ -72,7 +68,6 @@ exports.getBestRatedBooks = (req, res) => {
           book.averageRating = book.ratings.length ? totalRatings / book.ratings.length : 0;
         });
   
-        // Trier les livres par moyenne décroissante
         books.sort((a, b) => b.averageRating - a.averageRating);
   
         // Renvoyer les 3 meilleurs
